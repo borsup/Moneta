@@ -1,0 +1,29 @@
+{
+  "name": "Moneta – Calculateur de prime",
+  "short_name": "Moneta",
+  "description": "Calculez instantanément la prime sur l'or et l'argent. Gratuit, sans pub.",
+  "start_url": "/moneta/",
+  "scope": "/moneta/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#110F08",
+  "theme_color": "#1a1408",
+  "lang": "fr",
+  "categories": ["finance", "utilities"],
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [],
+  "shortcuts": []
+}
