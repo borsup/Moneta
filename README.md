@@ -74,4 +74,4 @@ Conçu pour les acheteurs de métaux précieux — bijouteries, particuliers, co
 
 ---
 
-<p align="center"><sub>Moneta © 2025 · 100% gratuit · Sans publicité</sub></p>
+<p align="center"><sub>Moneta © April 2026 · 100% gratuit · Sans publicité</sub></p>
