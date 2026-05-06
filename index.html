@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Moneta – Calculateur de prime</title>
+  <meta name="description" content="Calculez instantanément la prime sur l'or et l'argent avant d'acheter. Gratuit, sans pub." />
+  <meta name="theme-color" content="#F2B333" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Moneta" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ── THEME VARIABLES ─────────────────────────────────────────── */
+    :root {
+      --gold:          #F2B333;
+      --gold-dark:     #CC9933;
+      --gold-light:    #FDE68A;
+      --gold-surface:  #FFF8E7;
+      --gold-border:   #F2B333;
+
+      --silver:        #9E9E9E;
+      --silver-dark:   #757575;
+      --silver-light:  #D9DDE6;
+      --silver-surface:#F5F5F5;
+      --silver-border: #9E9E9E;
+
+      --bg:            #FAFAFA;
+      --surface:       #FFFFFF;
+      --surface2:      #F5F5F5;
+      --text:          #212121;
+      --text2:         #757575;
+      --divider:       #E0E0E0;
+
+      --green:         #2E7D32;
+      --green-bg:      #E8F5E9;
+      --green-border:  #A5D6A7;
+      --orange:        #E65100;
+      --orange-bg:     #FFF3E0;
+      --orange-border: #FFCC80;
+      --red:           #C62828;
+      --red-bg:        #FFEBEE;
+      --red-border:    #EF9A9A;
+      --blue:          #1565C0;
+      --blue-bg:       #E3F2FD;
+      --blue-border:   #90CAF9;
+
+      --radius:        12px;
+      --radius-sm:     8px;
+      --radius-pill:   24px;
+      --shadow:        0 1px 3px rgba(0,0,0,.12), 0 1px 2px rgba(0,0,0,.08);
+      --shadow-md:     0 3px 6px rgba(0,0,0,.12), 0 2px 4px rgba(0,0,0,.08);
+
+      /* active metal accent — defaults to gold */
+      --acc:           var(--gold);
+      --acc-dark:      var(--gold-dark);
+      --acc-light:     var(--gold-light);
+      --acc-surface:   var(--gold-surface);
+      --acc-border:    var(--gold-border);
+    }
+
+    .silver-active {
+      --acc:         var(--silver);
+      --acc-dark:    var(--silver-dark);
+      --acc-light:   var(--silver-light);
+      --acc-surface: var(--silver-surface);
+      --acc-border:  var(--silver-border);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Roboto', sans-serif;
+      font-size: 14px;
+      -webkit-font-smoothing: antialiased;
+      overscroll-behavior: none;
+    }
+
+    #app {
+      max-width: 480px;
+      margin: 0 auto;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      padding-bottom: env(safe-area-inset-bottom, 12px);
+    }
+
+    /* ── TOP APP BAR ─────────────────────────────────────────────── */
+    .appbar {
+      background: var(--acc);
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: var(--shadow);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      transition: background 0.3s;
+    }
+
+    .appbar-left { display: flex; align-items: center; gap: 10px; }
+
+    .appbar-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: #1a1208;
+      letter-spacing: .02em;
+    }
+
+    .appbar-sub {
+      font-size: 11px;
+      font-weight: 400;
+      color: rgba(0,0,0,.55);
+      letter-spacing: .04em;
+    }
+
+    .lang-btn {
+      background: rgba(0,0,0,.12);
+      border: none;
+      color: #1a1208;
+      font-family: 'Roboto', sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      padding: 5px 12px;
+      border-radius: var(--radius-pill);
+      cursor: pointer;
+      transition: background .2s;
+    }
+    .lang-btn:hover { background: rgba(0,0,0,.2); }
+
+    /* ── SPOT BAR ────────────────────────────────────────────────── */
+    .spot-bar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--divider);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .spot-prices { display: flex; gap: 24px; flex: 1; }
+
+    .spot-item { display: flex; flex-direction: column; gap: 1px; }
+
+    .spot-lbl {
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--text2);
+    }
+
+    .spot-val {
+      font-size: 18px;
+      font-weight: 700;
+      line-height: 1;
+      transition: color .3s;
+    }
+
+    .spot-item.g .spot-val { color: var(--gold-dark); }
+    .spot-item.s .spot-val { color: var(--silver-dark); }
+    .spot-val.loading { color: var(--divider); }
+
+    .spot-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+
+    .spot-src {
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+    .spot-src.live   { color: var(--green); }
+    .spot-src.cached { color: var(--orange); }
+    .spot-src.error  { color: var(--red); }
+    .spot-src.manual { color: var(--text2); }
+
+    .refresh-btn {
+      background: var(--surface2);
+      border: 1px solid var(--divider);
+      border-radius: 50%;
+      width: 32px; height: 32px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      color: var(--text2);
+      font-size: 15px;
+      transition: all .2s;
+    }
+    .refresh-btn:hover { border-color: var(--acc); color: var(--acc-dark); }
+    .refresh-btn.spin  { animation: spin .8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── METAL TABS ──────────────────────────────────────────────── */
+    .metal-tabs {
+      background: var(--surface);
+      display: flex;
+      border-bottom: 2px solid var(--divider);
+    }
+
+    .mtab {
+      flex: 1;
+      padding: 12px 8px;
+      background: none;
+      border: none;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -2px;
+      cursor: pointer;
+      font-family: 'Roboto', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      color: var(--text2);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      transition: all .2s;
+    }
+
+    .mtab .sym { font-size: 18px; font-weight: 700; }
+    .mtab.gold-tab .sym   { color: var(--gold-dark); }
+    .mtab.silver-tab .sym { color: var(--silver-dark); }
+
+    .mtab.active {
+      color: var(--acc-dark);
+      border-bottom-color: var(--acc);
+    }
+
+    .mtab.gold-tab.active   { color: var(--gold-dark);   border-bottom-color: var(--gold);   }
+    .mtab.silver-tab.active { color: var(--silver-dark); border-bottom-color: var(--silver); }
+
+    /* ── SCROLL BODY ─────────────────────────────────────────────── */
+    .body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* ── CARD ────────────────────────────────────────────────────── */
+    .card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 16px;
+    }
+
+    .card-title {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--acc-dark);
+      margin-bottom: 12px;
+      transition: color .3s;
+    }
+
+    /* ── QUICK PILLS ─────────────────────────────────────────────── */
+    .pills { display: flex; flex-wrap: wrap; gap: 7px; }
+
+    .pill {
+      padding: 6px 13px;
+      border-radius: var(--radius-pill);
+      border: 1.5px solid var(--divider);
+      background: var(--surface2);
+      font-family: 'Roboto', sans-serif;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text2);
+      cursor: pointer;
+      transition: all .18s;
+      white-space: nowrap;
+    }
+
+    .pill:hover {
+      border-color: var(--acc);
+      color: var(--acc-dark);
+      background: var(--acc-surface);
+    }
+
+    .pill.active {
+      background: var(--acc);
+      border-color: var(--acc);
+      color: #fff;
+      font-weight: 700;
+      box-shadow: 0 2px 6px rgba(0,0,0,.15);
+    }
+
+    .gold-active   .pill.active { color: #1a1208; }
+    .silver-active .pill.active { color: #fff; }
+
+    /* ── TEXT FIELDS ─────────────────────────────────────────────── */
+    .field { display: flex; flex-direction: column; gap: 5px; }
+
+    .field label {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      color: var(--text2);
+    }
+
+    .input-wrap { position: relative; }
+
+    .input-wrap input {
+      width: 100%;
+      background: var(--surface2);
+      border: 1.5px solid var(--divider);
+      border-radius: var(--radius-sm);
+      padding: 11px 42px 11px 13px;
+      font-family: 'Roboto', sans-serif;
+      font-size: 15px;
+      font-weight: 400;
+      color: var(--text);
+      outline: none;
+      transition: border-color .2s, background .2s;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    .input-wrap input:focus {
+      border-color: var(--acc);
+      background: var(--acc-surface);
+    }
+
+    .input-wrap input.api-filled {
+      border-color: var(--green-border);
+      background: var(--green-bg);
+    }
+
+    .input-wrap input::placeholder { color: #BDBDBD; }
+
+    .input-unit {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text2);
+      pointer-events: none;
+    }
+
+    .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    /* ── DIVIDER ─────────────────────────────────────────────────── */
+    .divider {
+      height: 1px;
+      background: var(--divider);
+      margin: 10px 0;
+    }
+
+    /* ── CALCULATE BUTTON ────────────────────────────────────────── */
+    .calc-btn {
+      width: 100%;
+      padding: 15px;
+      background: var(--acc);
+      border: none;
+      border-radius: var(--radius);
+      font-family: 'Roboto', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: #1a1208;
+      cursor: pointer;
+      box-shadow: var(--shadow-md);
+      transition: all .2s;
+    }
+
+    .calc-btn:active { transform: scale(.98); box-shadow: var(--shadow); }
+    .calc-btn:hover  { filter: brightness(1.05); }
+    .silver-active .calc-btn { color: #fff; }
+
+    /* ── RESULT CARD ─────────────────────────────────────────────── */
+    .result-card {
+      border-radius: var(--radius);
+      padding: 20px;
+      border: 1.5px solid;
+      display: none;
+      animation: slideUp .3s ease;
+    }
+
+    .result-card.vis { display: block; }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .result-card.cheap  { background: var(--blue-bg);   border-color: var(--blue-border);   }
+    .result-card.good   { background: var(--green-bg);  border-color: var(--green-border);  }
+    .result-card.ok     { background: var(--orange-bg); border-color: var(--orange-border); }
+    .result-card.high   { background: var(--red-bg);    border-color: var(--red-border);    }
+
+    .result-pct {
+      font-size: 48px;
+      font-weight: 700;
+      text-align: center;
+      line-height: 1;
+    }
+
+    .result-card.cheap  .result-pct { color: var(--blue); }
+    .result-card.good   .result-pct { color: var(--green); }
+    .result-card.ok     .result-pct { color: var(--orange); }
+    .result-card.high   .result-pct { color: var(--red); }
+
+    .result-lbl {
+      text-align: center;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+
+    .result-card.cheap  .result-lbl { color: var(--blue); }
+    .result-card.good   .result-lbl { color: var(--green); }
+    .result-card.ok     .result-lbl { color: var(--orange); }
+    .result-card.high   .result-lbl { color: var(--red); }
+
+    .result-details {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(0,0,0,.08);
+    }
+
+    .detail { text-align: center; }
+    .detail-val { font-size: 15px; font-weight: 600; color: var(--text); display: block; }
+    .detail-lbl { font-size: 10px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--text2); display: block; margin-top: 2px; }
+
+    /* ── ERROR ───────────────────────────────────────────────────── */
+    .err-msg {
+      display: none;
+      padding: 10px 14px;
+      background: var(--red-bg);
+      border: 1px solid var(--red-border);
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      color: var(--red);
+    }
+    .err-msg.vis { display: block; }
+
+    /* ── RESET ───────────────────────────────────────────────────── */
+    .reset-btn {
+      display: none;
+      width: 100%;
+      padding: 12px;
+      background: transparent;
+      border: 1.5px solid var(--divider);
+      border-radius: var(--radius);
+      font-family: 'Roboto', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text2);
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .reset-btn.vis   { display: block; }
+    .reset-btn:hover { border-color: var(--acc); color: var(--acc-dark); }
+
+    /* ── LEGEND ──────────────────────────────────────────────────── */
+    .legend {
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .legend-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 11px 16px;
+      border-bottom: 1px solid var(--divider);
+    }
+    .legend-row:last-child { border-bottom: none; }
+
+    .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .legend-row:nth-child(1) .legend-dot { background: var(--blue); }
+    .legend-row:nth-child(2) .legend-dot { background: var(--green); }
+    .legend-row:nth-child(3) .legend-dot { background: var(--orange); }
+    .legend-row:nth-child(4) .legend-dot { background: var(--red); }
+
+    .legend-lbl { font-size: 13px; font-weight: 500; color: var(--text); flex: 1; }
+    .legend-range { font-size: 12px; color: var(--text2); }
+
+    /* ── FOOTER ──────────────────────────────────────────────────── */
+    footer {
+      text-align: center;
+      font-size: 11px;
+      color: var(--text2);
+      padding: 8px 16px 4px;
+      opacity: .6;
+    }
+
+    /* ── INSTALL BANNER ──────────────────────────────────────────── */
+    #ibanner {
+      display: none;
+      position: fixed;
+      bottom: 16px; left: 16px; right: 16px;
+      background: var(--surface);
+      border: 1.5px solid var(--acc);
+      border-radius: var(--radius);
+      padding: 12px 14px;
+      z-index: 100;
+      box-shadow: var(--shadow-md);
+      animation: slideUp .4s ease;
+    }
+    #ibanner.vis { display: flex; align-items: center; gap: 10px; }
+    .itext { flex: 1; font-size: 13px; color: var(--text); line-height: 1.4; }
+    .itext strong { color: var(--acc-dark); }
+    .ibtn { background: var(--acc); color: #1a1208; border: none; border-radius: var(--radius-sm); padding: 8px 14px; font-family: 'Roboto', sans-serif; font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+    .silver-active .ibtn { color: #fff; }
+    .iclose { background: none; border: none; color: var(--text2); font-size: 20px; cursor: pointer; line-height: 1; padding: 0 0 0 4px; }
+
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
+    input[type=number] { -moz-appearance: textfield; }
+  </style>
+</head>
+<body>
+<div id="app" class="gold-active">
+
+  <!-- APP BAR -->
+  <div class="appbar" id="appbar">
+    <div class="appbar-left">
+      <div>
+        <div class="appbar-title">Moneta</div>
+        <div class="appbar-sub" id="l-tag">calculateur de prime</div>
+      </div>
+    </div>
+    <button class="lang-btn" id="l-lang" onclick="toggleLang()">EN</button>
+  </div>
+
+  <!-- SPOT BAR -->
+  <div class="spot-bar">
+    <div class="spot-prices">
+      <div class="spot-item g">
+        <span class="spot-lbl">Au · €/g</span>
+        <span class="spot-val loading" id="sv-gold">—</span>
+      </div>
+      <div class="spot-item s">
+        <span class="spot-lbl">Ag · €/g</span>
+        <span class="spot-val loading" id="sv-silver">—</span>
+      </div>
+    </div>
+    <div class="spot-right">
+      <span class="spot-src manual" id="spot-src">—</span>
+      <button class="refresh-btn" id="refresh-btn" onclick="fetchSpot(true)">↻</button>
+    </div>
+  </div>
+
+  <!-- METAL TABS -->
+  <div class="metal-tabs">
+    <button class="mtab gold-tab active" id="tab-g" onclick="setMetal('gold')">
+      <span class="sym">Au</span>
+      <span id="l-gold">Or</span>
+    </button>
+    <button class="mtab silver-tab" id="tab-s" onclick="setMetal('silver')">
+      <span class="sym">Ag</span>
+      <span id="l-silver">Argent</span>
+    </button>
+  </div>
+
+  <!-- SCROLL BODY -->
+  <div class="body">
+
+    <!-- FINENESS CARD -->
+    <div class="card">
+      <div class="card-title" id="l-fin-title">Titre (fineness)</div>
+      <div class="pills" id="fin-pills"></div>
+      <div class="divider"></div>
+      <div class="field">
+        <label id="l-fin-manual">Titre :</label>
+        <div class="input-wrap">
+          <input type="number" id="inp-fin" inputmode="decimal"
+                 placeholder="ex: 0.7500" min="0" max="1" step="0.0001" />
+        </div>
+      </div>
+    </div>
+
+    <!-- WEIGHT CARD -->
+    <div class="card">
+      <div class="card-title" id="l-weight-title">Poids rapide</div>
+      <div class="pills" id="weight-pills"></div>
+      <div class="divider"></div>
+      <div class="field">
+        <label id="l-weight-manual">Poids exact :</label>
+        <div class="input-wrap">
+          <input type="number" id="inp-weight" inputmode="decimal"
+                 placeholder="ex: 3.1" step="0.001" min="0" />
+          <span class="input-unit">g</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- PRICE CARD -->
+    <div class="card">
+      <div class="card-title" id="l-price-title">Prix d'achat & cours spot</div>
+      <div class="row2">
+        <div class="field">
+          <label id="l-price">Prix d'achat</label>
+          <div class="input-wrap">
+            <input type="number" id="inp-price" inputmode="decimal"
+                   placeholder="ex: 250" step="0.01" min="0" />
+            <span class="input-unit">€</span>
+          </div>
+        </div>
+        <div class="field">
+          <label id="l-spot">Cours spot</label>
+          <div class="input-wrap">
+            <input type="number" id="inp-spot" inputmode="decimal"
+                   placeholder="—" step="0.01" min="0" />
+            <span class="input-unit">€/g</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ERRORS -->
+    <div class="err-msg" id="err-msg"></div>
+
+    <!-- CALCULATE -->
+    <button class="calc-btn" onclick="calculate()">
+      <span id="l-calc">Calculer la prime</span>
+    </button>
+
+    <!-- RESULT -->
+    <div class="result-card" id="result-card">
+      <div class="result-pct" id="r-pct"></div>
+      <div class="result-lbl" id="r-lbl"></div>
+      <div class="result-details">
+        <div class="detail">
+          <span class="detail-val" id="r-alloy"></span>
+          <span class="detail-lbl" id="l-alloy">Cours alliage</span>
+        </div>
+        <div class="detail">
+          <span class="detail-val" id="r-pgram"></span>
+          <span class="detail-lbl" id="l-pgram">Prix payé/g</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- RESET -->
+    <button class="reset-btn" id="reset-btn" onclick="doReset()">
+      <span id="l-reset">↺ Nouveau calcul</span>
+    </button>
+
+    <!-- LEGEND -->
+    <div class="legend">
+      <div class="legend-row">
+        <div class="legend-dot"></div>
+        <span class="legend-lbl" id="l-leg1">Bon marché</span>
+        <span class="legend-range" id="l-leg1b">≤ 0%</span>
+      </div>
+      <div class="legend-row">
+        <div class="legend-dot"></div>
+        <span class="legend-lbl" id="l-leg2">Bon prix</span>
+        <span class="legend-range" id="l-leg2b">0% – 8%</span>
+      </div>
+      <div class="legend-row">
+        <div class="legend-dot"></div>
+        <span class="legend-lbl" id="l-leg3">Prix correct</span>
+        <span class="legend-range" id="l-leg3b">8% – 12%</span>
+      </div>
+      <div class="legend-row">
+        <div class="legend-dot"></div>
+        <span class="legend-lbl" id="l-leg4">Prix élevé</span>
+        <span class="legend-range" id="l-leg4b">&gt; 12%</span>
+      </div>
+    </div>
+
+    <footer>Moneta © 2025 · borsup · <span id="l-free">100% gratuit · sans pub</span></footer>
+  </div><!-- /body -->
+</div><!-- /app -->
+
+<!-- INSTALL BANNER -->
+<div id="ibanner">
+  <div class="itext"><strong id="l-ititle">Installer Moneta</strong><br><span id="l-ibody">Ajouter à l'écran d'accueil</span></div>
+  <button class="ibtn" id="install-btn">Installer</button>
+  <button class="iclose" onclick="document.getElementById('ibanner').classList.remove('vis')">×</button>
+</div>
+
+<script>
+/* ── CONFIG ─────────────────────────────────────────────────────── */
+const WORKER_URL = 'https://moneta-api-proxy.patrick-borsu.workers.dev';
+const FALLBACK   = { gold: 125.00, silver: 1.00 };
+const CACHE_KEY  = 'moneta_spot_v1';
+const CACHE_TTL  = 8 * 3600 * 1000;
+const TROY_OZ    = 31.1035;
+
+/* ── PURITIES ───────────────────────────────────────────────────── */
+const PURITIES = {
+  gold: [
+    { label: '24K',   sub: '999‰', v: 0.9999 },
+    { label: '22K',   sub: '916‰', v: 0.9167 },
+    { label: '21.6K', sub: '900‰', v: 0.9000 },
+    { label: '18K',   sub: '750‰', v: 0.7500 },
+    { label: '14K',   sub: '585‰', v: 0.5833 },
+  ],
+  silver: [
+    { label: '999.9', sub: 'Fin',      v: 0.9999 },
+    { label: '925',   sub: 'Sterling', v: 0.9250 },
+    { label: '900',   sub: '',         v: 0.9000 },
+    { label: '835',   sub: '',         v: 0.8350 },
+    { label: '800',   sub: 'Bilon',    v: 0.8000 },
+  ],
+};
+
+/* ── WEIGHTS ────────────────────────────────────────────────────── */
+const WEIGHTS = {
+  gold: [
+    { label: '1 Oz',     v: 31.1035 },
+    { label: '1/2 Oz',   v: 15.5518 },
+    { label: '1/4 Oz',   v: 7.7759  },
+    { label: '1/10 Oz',  v: 3.1104  },
+    { label: '1/20 Oz',  v: 1.5552  },
+  ],
+  silver: [
+    { label: '1 Oz',     v: 31.1035 },
+    { label: '1/2 Oz',   v: 15.5518 },
+    { label: '1/4 Oz',   v: 7.7759  },
+    { label: '1/10 Oz',  v: 3.1104  },
+    { label: '1/20 Oz',  v: 1.5552  },
+  ],
+};
+
+/* ── TRANSLATIONS ───────────────────────────────────────────────── */
+const TR = {
+  fr: {
+    tag: 'calculateur de prime',
+    gold: 'Or', silver: 'Argent',
+    finTitle: 'Titre (fineness)', finManual: 'Titre :',
+    weightTitle: 'Poids rapide', weightManual: 'Poids exact :',
+    priceTitle: "Prix d'achat & cours spot",
+    price: "Prix d'achat", spot: 'Cours spot',
+    calc: 'Calculer la prime', reset: '↺ Nouveau calcul',
+    alloy: 'Cours alliage', pgram: 'Prix payé / g',
+    eFields: 'Veuillez remplir tous les champs.',
+    eNeg:    'Les valeurs doivent être positives.',
+    eFin:    'Titre invalide (0 – 1).',
+    cheap: 'Bon marché', good: 'Bon prix', ok: 'Prix correct', high: 'Prix élevé',
+    lb1: '≤ 0%', lb2: '0% – 8%', lb3: '8% – 12%', lb4: '> 12%',
+    free: '100% gratuit · sans pub',
+    ititle: 'Installer Moneta', ibody: "Ajouter à l'écran d'accueil",
+    live: 'En direct', cached: 'En cache', manual: 'Manuel', error: 'Indisponible',
+    langBtn: 'EN',
+  },
+  en: {
+    tag: 'premium calculator',
+    gold: 'Gold', silver: 'Silver',
+    finTitle: 'Fineness', finManual: 'Fineness:',
+    weightTitle: 'Quick weight', weightManual: 'Exact weight:',
+    priceTitle: 'Purchase price & spot',
+    price: 'Purchase price', spot: 'Spot price',
+    calc: 'Calculate premium', reset: '↺ New calculation',
+    alloy: 'Alloy spot', pgram: 'Price paid / g',
+    eFields: 'Please fill in all fields.',
+    eNeg:    'Values must be positive.',
+    eFin:    'Invalid fineness (0 – 1).',
+    cheap: 'Bargain', good: 'Good price', ok: 'Fair price', high: 'High price',
+    lb1: '≤ 0%', lb2: '0% – 8%', lb3: '8% – 12%', lb4: '> 12%',
+    free: '100% free · no ads',
+    ititle: 'Install Moneta', ibody: 'Add to home screen',
+    live: 'Live', cached: 'Cached', manual: 'Manual', error: 'Unavailable',
+    langBtn: 'FR',
+  },
+};
+
+/* ── STATE ──────────────────────────────────────────────────────── */
+let lang      = 'fr';
+let metal     = 'gold';
+let selPurity = PURITIES.gold[0];   // null = manual fin
+let selWeight = null;               // null = manual weight
+let spotGold  = null;
+let spotSilver= null;
+let spotSrc   = 'manual';
+
+const t = k => TR[lang][k] || k;
+
+/* ── SPOT FETCH ─────────────────────────────────────────────────── */
+async function fetchSpot(force = false) {
+  const btn = document.getElementById('refresh-btn');
+  btn.classList.add('spin');
+
+  if (!force) {
+    try {
+      const c = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null');
+      if (c && Date.now() - c.ts < CACHE_TTL) {
+        applySpot(c.gold, c.silver, 'cached');
+        btn.classList.remove('spin');
+        return;
+      }
+    } catch(_) {}
+  }
+
+  try {
+    const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 10000));
+    const fetchJSON = url => fetch(url).then(r => { if (!r.ok) throw new Error('HTTP '+r.status); return r.json(); });
+
+    const [dXAU, dXAG] = await Promise.race([
+      Promise.all([ fetchJSON(WORKER_URL + '/XAU'), fetchJSON(WORKER_URL + '/XAG') ]),
+      timeout,
+    ]);
+
+    const g = parseFloat(dXAU.price) / TROY_OZ;
+    const s = parseFloat(dXAG.price) / TROY_OZ;
+    if (!g || !s) throw new Error('Invalid data');
+
+    localStorage.setItem(CACHE_KEY, JSON.stringify({ gold:g, silver:s, ts:Date.now() }));
+    applySpot(g, s, 'live');
+  } catch(e) {
+    console.warn('Spot fetch error:', e.message);
+    try {
+      const c = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null');
+      if (c) { applySpot(c.gold, c.silver, 'error'); btn.classList.remove('spin'); return; }
+    } catch(_) {}
+    applySpot(null, null, 'error');
+  } finally {
+    btn.classList.remove('spin');
+  }
+}
+
+function applySpot(g, s, src) {
+  spotGold = g; spotSilver = s; spotSrc = src;
+  const gEl = document.getElementById('sv-gold');
+  const sEl = document.getElementById('sv-silver');
+  if (g) { gEl.textContent = g.toFixed(2); gEl.classList.remove('loading'); }
+  else   { gEl.textContent = '—'; gEl.classList.add('loading'); }
+  if (s) { sEl.textContent = s.toFixed(2); sEl.classList.remove('loading'); }
+  else   { sEl.textContent = '—'; sEl.classList.add('loading'); }
+  const srcEl = document.getElementById('spot-src');
+  srcEl.textContent = t(src);
+  srcEl.className   = 'spot-src ' + src;
+  fillSpotInput();
+}
+
+function fillSpotInput() {
+  const inp = document.getElementById('inp-spot');
+  if (inp.dataset.override) return;
+  const val = metal === 'gold' ? spotGold : spotSilver;
+  if (val) { inp.value = val.toFixed(2); inp.classList.add('api-filled'); }
+}
+
+/* ── RENDER PILLS ───────────────────────────────────────────────── */
+function renderPurities() {
+  const container = document.getElementById('fin-pills');
+  container.innerHTML = '';
+  PURITIES[metal].forEach(p => {
+    const b = document.createElement('button');
+    b.className = 'pill' + (p === selPurity ? ' active' : '');
+    b.textContent = p.label;
+    b.onclick = () => {
+      selPurity = p;
+      document.getElementById('inp-fin').value = p.v.toFixed(4);
+      renderPurities();
+    };
+    container.appendChild(b);
+  });
+}
+
+function renderWeights() {
+  const container = document.getElementById('weight-pills');
+  container.innerHTML = '';
+  WEIGHTS[metal].forEach(w => {
+    const b = document.createElement('button');
+    b.className = 'pill' + (w === selWeight ? ' active' : '');
+    b.textContent = w.label;
+    b.onclick = () => {
+      selWeight = w;
+      document.getElementById('inp-weight').value = w.v;
+      renderWeights();
+    };
+    container.appendChild(b);
+  });
+}
+
+function getPurity() {
+  if (selPurity !== null) return selPurity.v;
+  const v = parseFloat(document.getElementById('inp-fin').value);
+  return (v > 0 && v <= 1) ? v : null;
+}
+
+/* ── METAL SELECT ───────────────────────────────────────────────── */
+function setMetal(m) {
+  metal = m; selPurity = PURITIES[m][0]; selWeight = null;
+  document.getElementById('tab-g').classList.toggle('active', m === 'gold');
+  document.getElementById('tab-s').classList.toggle('active', m === 'silver');
+  document.getElementById('inp-fin').value    = '';
+  document.getElementById('inp-weight').value = '';
+
+  const app = document.getElementById('app');
+  app.classList.toggle('gold-active',   m === 'gold');
+  app.classList.toggle('silver-active', m === 'silver');
+
+  // Update appbar color
+  document.getElementById('appbar').style.background = m === 'gold' ? 'var(--gold)' : 'var(--silver-light)';
+
+  // Reset spot override
+  const inp = document.getElementById('inp-spot');
+  delete inp.dataset.override;
+  inp.classList.remove('api-filled');
+  fillSpotInput();
+
+  renderPurities();
+  renderWeights();
+  hideResult();
+}
+
+/* ── LANG ───────────────────────────────────────────────────────── */
+function toggleLang() { lang = lang === 'fr' ? 'en' : 'fr'; applyLang(); }
+
+function applyLang() {
+  const s = (id, k) => { const e = document.getElementById(id); if(e) e.textContent = t(k); };
+  s('l-tag','tag'); s('l-gold','gold'); s('l-silver','silver');
+  s('l-fin-title','finTitle'); s('l-fin-manual','finManual');
+  s('l-weight-title','weightTitle'); s('l-weight-manual','weightManual');
+  s('l-price-title','priceTitle'); s('l-price','price'); s('l-spot','spot');
+  s('l-calc','calc'); s('l-reset','reset');
+  s('l-alloy','alloy'); s('l-pgram','pgram');
+  s('l-leg1','cheap'); s('l-leg2','good'); s('l-leg3','ok'); s('l-leg4','high');
+  s('l-leg1b','lb1'); s('l-leg2b','lb2'); s('l-leg3b','lb3'); s('l-leg4b','lb4');
+  s('l-free','free'); s('l-ititle','ititle'); s('l-ibody','ibody');
+  s('l-lang','langBtn');
+  const srcEl = document.getElementById('spot-src');
+  if (srcEl) srcEl.textContent = t(spotSrc);
+  const rc = document.getElementById('result-card');
+  if (rc.classList.contains('vis')) {
+    const cls = ['cheap','good','ok','high'].find(c => rc.classList.contains(c));
+    if (cls) document.getElementById('r-lbl').textContent = t(cls);
+  }
+}
+
+/* ── CALCULATE ──────────────────────────────────────────────────── */
+function calculate() {
+  const errEl = document.getElementById('err-msg');
+  errEl.classList.remove('vis'); hideResult();
+
+  const pur  = getPurity();
+  const spot = parseFloat(document.getElementById('inp-spot').value);
+  const px   = parseFloat(document.getElementById('inp-price').value);
+  const wt   = parseFloat(document.getElementById('inp-weight').value);
+
+  if (!pur)                               { errEl.textContent = t('eFin');    errEl.classList.add('vis'); return; }
+  if (isNaN(spot)||isNaN(px)||isNaN(wt))  { errEl.textContent = t('eFields'); errEl.classList.add('vis'); return; }
+  if (spot<=0||px<=0||wt<=0)              { errEl.textContent = t('eNeg');    errEl.classList.add('vis'); return; }
+
+  const spotAlloy  = spot * pur;
+  const pricePaidG = px / wt;
+  const premium    = ((pricePaidG / spotAlloy) - 1) * 100;
+
+  const cls = premium <= 0 ? 'cheap' : premium <= 8 ? 'good' : premium <= 12 ? 'ok' : 'high';
+
+  const rc = document.getElementById('result-card');
+  rc.className = `result-card vis ${cls}`;
+  document.getElementById('r-pct').textContent   = (premium >= 0 ? '+' : '') + premium.toFixed(2) + '%';
+  document.getElementById('r-lbl').textContent   = t(cls);
+  document.getElementById('r-alloy').textContent = spotAlloy.toFixed(3) + ' €/g';
+  document.getElementById('r-pgram').textContent = pricePaidG.toFixed(3) + ' €/g';
+
+  document.getElementById('reset-btn').classList.add('vis');
+  if (navigator.vibrate) navigator.vibrate(30);
+
+  // Scroll to result
+  setTimeout(() => rc.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
+}
+
+function hideResult() {
+  document.getElementById('result-card').classList.remove('vis');
+  document.getElementById('reset-btn').classList.remove('vis');
+}
+
+function doReset() {
+  document.getElementById('inp-price').value  = '';
+  document.getElementById('inp-weight').value = '';
+  selWeight = null;
+  document.getElementById('err-msg').classList.remove('vis');
+  renderWeights();
+  hideResult();
+  document.getElementById('inp-price').focus();
+}
+
+/* ── EVENT LISTENERS ────────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('input').forEach(i => {
+    i.addEventListener('keydown', e => { if (e.key === 'Enter') calculate(); });
+  });
+
+  document.getElementById('inp-spot').addEventListener('input', function() {
+    this.dataset.override = '1';
+    this.classList.remove('api-filled');
+  });
+
+  document.getElementById('inp-fin').addEventListener('input', function() {
+    const v = parseFloat(this.value);
+    if (v > 0 && v <= 1) {
+      selPurity = null;
+      document.querySelectorAll('#fin-pills .pill').forEach(b => b.classList.remove('active'));
+    }
+  });
+
+  document.getElementById('inp-weight').addEventListener('input', function() {
+    selWeight = null;
+    document.querySelectorAll('#weight-pills .pill').forEach(b => b.classList.remove('active'));
+  });
+});
+
+/* ── PWA INSTALL ────────────────────────────────────────────────── */
+let dp;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault(); dp = e;
+  document.getElementById('ibanner').classList.add('vis');
+});
+document.getElementById('install-btn').addEventListener('click', async () => {
+  if (!dp) return;
+  dp.prompt(); await dp.userChoice; dp = null;
+  document.getElementById('ibanner').classList.remove('vis');
+});
+window.addEventListener('appinstalled', () => {
+  document.getElementById('ibanner').classList.remove('vis');
+});
+
+/* ── SERVICE WORKER ─────────────────────────────────────────────── */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(e => console.warn('SW:', e));
+  });
+}
+
+/* ── INIT ───────────────────────────────────────────────────────── */
+renderPurities();
+renderWeights();
+applyLang();
+fetchSpot();
+</script>
+</body>
+</html>
